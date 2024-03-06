@@ -10,14 +10,14 @@ l=1;
 M=1600; N=1200; %Tamaño de matrix (Sensor CMOS - EO1312C)
 t1=1:M;
 t2=1:N;
-path='D:\Trabajo tesis\ALEXANDER\Codigos_Finales\15PSI\frame_';
+path='/home/omar/Bachelor_works/Códigos_franjas_y_filtros/Imag_test/frame_';
 sufix='.png';
-spi=101;
-spf=102;
+spi=16;
+spf=31;
 for i=spi:spf
    I=imread([path num2str(i) sufix]);
     D=double(I(:,:,1));
-    I1=fftshift(fft2(double(D)))
+    I1=fftshift(fft2(double(D)));
     if (i==spi)
         %Encontrar el indice del punto maximo del lobulo
         [a1,ind]=max(abs(I1(600,805:end)));   %Se toma en la mitad del espectro (512)
@@ -74,6 +74,7 @@ for i=spi:spf
     Mask=((magni1tak-min(magni1tak(:)))/(max(magni1tak(:))-min(magni1tak(:))))>=1/exp(2);
     Mask2=((magni1tak-min(magni1tak(:)))/(max(magni1tak(:))-min(magni1tak(:))))>0;
   
+    % Filtrado de puntos de imagen binaria
     se=strel('disk',30);
     b11=imerode(Mask,se);
     Mask1=imdilate(b11,se);
@@ -98,7 +99,7 @@ for i=spi:spf
 %     pos_s1=find((s1(2,:))==1200);
     pos_s1=find(diff(s1(2,:))>10);
     %Con este algoritmo se dibujan las líneas
-    pix_eras=10;
+    pix_eras=20;
 
     flag=0;
     puntoiniY=[];
