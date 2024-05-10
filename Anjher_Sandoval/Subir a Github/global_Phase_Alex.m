@@ -1,42 +1,43 @@
-%Young parameters
-distance=2.2; %Distances between mirrors and sensor
-separation=0.07; %between mirrors
-lambda=632e-9; %Due to laser
+distance=2.2;
+separation=0.07;
+lambda=632e-9;
 l=1;
 %This algorithm tries to find global phase from Takeda algorithm. So, it
 %takes the images, executes FFT2, find fundamental frequencies and separate
 %them of spectrum, after it applies hamming windowing and return to direct
 %space where is calculated phase.
-M=1600; N=1200; %Tamaño de matrix (Sensor CMOS - EO1312C)
+M=1600; N=1200;
 t1=1:M;
 t2=1:N;
-path='/home/omar/Bachelor_works/Códigos_franjas_y_filtros/Imag_test/frame_';
-sufix='.png';
-spi=16;
-spf=31;
-for i=spi:spf
-   I=imread([path num2str(i) sufix]);
-    D=double(I(:,:,1));
-    I1=fftshift(fft2(double(D)));
-    if (i==spi)
-        %Encontrar el indice del punto maximo del lobulo
-        [a1,ind]=max(abs(I1(600,805:end)));   %Se toma en la mitad del espectro (512)
-        %para verificar dónde aperece la fundamental, también se toman 4 pixeles
-        %después de la DC para encontrar el centro de masa.
-        ind1=804+ind;
-        %Aquí se verifica la posición del centro de masa del lobulo.
-        [a2,ind2]=max(abs(I1(:,ind1)));
+% %path='D:\Trabajo tesis\ALEXANDER\Codigos_Finales\15PSI\frame_';
+% %sufix='.png';
+% %spi=101;
+% %spf=102;
+% %for i=spi:spf
+%    % I=imread([path num2str(i) sufix]);
+%    %  D=double(I(:,:,1));
+%    %  I1=fftshift(fft2(double(D)));
+%    %  if (i==spi)
+%    %      [a1,ind]=max(abs(I1(600,805:end)));   %Se toma en la mitad del espectro (512)
+%    %      %para verificar dónde aperece la fundamental, también se toman 4 pixeles
+%    %      %después de la DC para encontrar el centro de masa.
+%    %      ind1=804+ind;
+%    %      %Aquí se verifica la posición del centro de masa del lobulo.
+%    %      [a2,ind2]=max(abs(I1(:,ind1)));
+%    % 
+%    %      %A partir del centro de masa del lobulo se sacan las posiciones
+%    %      %alternas y así recortar el lóbulo
+%    %      posicini=find(abs(I1(:,ind1))>a2/100);
+%    %  %     deltau=round((posicini(end)-posicini(1))/2)+1;
+%    %      %Aquí se toma el primer valor separado de fo/3 para poder encontrar el
+%    %      %área a filtrar
+%    %      deltau=round((ind+4)/3)+1;
+%    %  end
+%    %  disp(i)
 
-        %A partir del centro de masa del lobulo se sacan las posiciones
-        %alternas y así recortar el lóbulo
-        posicini=find(abs(I1(:,ind1))>a2/100);
-    %     deltau=round((posicini(end)-posicini(1))/2)+1;
-        %Aquí se toma el primer valor separado de fo/3 para poder encontrar el
-        %área a filtrar
-        deltau=round((ind+4)/3)+1;
-    end
-    disp(i)
-    
+I = imread('rejillaGenerada1024.png');
+D=double(I(:,:,1));
+I1=fftshift(fft2(double(D)));
        
     %Se busca una copia para llevar sólo los cambios de la fundamental al
     %espacio directo
@@ -74,7 +75,6 @@ for i=spi:spf
     Mask=((magni1tak-min(magni1tak(:)))/(max(magni1tak(:))-min(magni1tak(:))))>=1/exp(2);
     Mask2=((magni1tak-min(magni1tak(:)))/(max(magni1tak(:))-min(magni1tak(:))))>0;
   
-    % Filtrado de puntos de imagen binaria
     se=strel('disk',30);
     b11=imerode(Mask,se);
     Mask1=imdilate(b11,se);
@@ -99,7 +99,7 @@ for i=spi:spf
 %     pos_s1=find((s1(2,:))==1200);
     pos_s1=find(diff(s1(2,:))>10);
     %Con este algoritmo se dibujan las líneas
-    pix_eras=20;
+    pix_eras=10;
 
     flag=0;
     puntoiniY=[];
