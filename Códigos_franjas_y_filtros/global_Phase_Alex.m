@@ -10,14 +10,14 @@ l=1;
 M=1600; N=1200; %Tamaño de matrix (Sensor CMOS - EO1312C)
 t1=1:M;
 t2=1:N;
-path='D:\Trabajo tesis\ALEXANDER\Codigos_Finales\15PSI\frame_';
+path='C:\Users\sangu\Documents\GitHub\trabajos_de_grado\Imag_test\frame_';
 sufix='.png';
-spi=101;
-spf=102;
+spi=16;
+spf=31;
 for i=spi:spf
    I=imread([path num2str(i) sufix]);
     D=double(I(:,:,1));
-    I1=fftshift(fft2(double(D)))
+    I1=fftshift(fft2(double(D)));
     if (i==spi)
         %Encontrar el indice del punto maximo del lobulo
         [a1,ind]=max(abs(I1(600,805:end)));   %Se toma en la mitad del espectro (512)
