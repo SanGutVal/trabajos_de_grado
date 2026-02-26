@@ -1,0 +1,37 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+.env
+.venv/
+venv/
+.envrc
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- MATLAB / Simulink ----
+*.asv
+*.m~
+*.mex*
+*.mlappinstall
+*.mltbx
+slprj/
+sccprj/
+codegen/
+*.autosave
+*.slxc
+octave-workspace
+
+# ---- Sistemas operativos / IDEs ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ---- Datos/resultados (ajusta a tu proyecto) ----
+data/raw/
+results/tmp/
