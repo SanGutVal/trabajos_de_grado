@@ -122,7 +122,7 @@ for i=spi:spf
         %puntos que corresponden a la interferencia
         if(isnan(medianaX(k-pix_eras+1))==0)
             puntosY=find(Mask1(:,medianaX(k-pix_eras+1))>0);
-            if (length(puntosY)~=0)
+            if (~isempty(puntosY))
                 medianXg=[medianXg median(s1(1,pos_s1(k)+pix_eras:pos_s1(k+1)-pix_eras))];
                 %Se encuentran los puntos en la frontera de esa línea
                 puntoiniY=[puntoiniY puntosY(1)];
@@ -200,8 +200,8 @@ return
 % xlabel('Indice de Período');
 
 edges=1:0.3:15;
-countp=histc(pr',edges);
-figure(4),bar(edges,sum(countp,2)/sum(sum(countp)),'histc');
+countp=histcnt(pr',edges);
+figure(4),bar(edges,sum(countp,2)/sum(sum(countp)),'histcnt');
 axis([0 15 0 0.99]);
 title('Periódos para:')
 ylabel('Porcentaje');
