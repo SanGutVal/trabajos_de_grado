@@ -1,5 +1,5 @@
 % ------------ CONFIGURACIÓN GENERAL ------------
-archivo = 'frame_31.png';          % Nombre de la imagen
+archivo = 'frame_101.jpg';          % Nombre de la imagen
 usar_roi_manual = false;            % true = Pedir ROI manual
 ancho_roi_fix = 216;
 alto_roi_fix  = 146;

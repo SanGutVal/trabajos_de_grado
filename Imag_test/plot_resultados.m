@@ -1,5 +1,5 @@
 %% -------- CARGAR RESULTADOS --------
-nombre_mat = 'resultados_frames_22_a_30.mat';   % ajustar nombre
+nombre_mat = 'resultados_frames_101_a_110.mat';   % ajustar nombre
 load(nombre_mat, 'resultados');
 
 % Extraer solo elementos con datos válidos en ROI fija
@@ -30,7 +30,7 @@ plot(frames_valid, freqs_fix(:,3), '-^', 'LineWidth',1.5);
 hold off; grid on;
 xlabel('Número de frame');
 ylabel('Frecuencia (ciclos/píxel)');
-title('Evolución temporal de los máximos locales (ROI fija)');
+title('Evolución temporal de los máximos locales');
 legend({'[0, 0.1)', '[0.1, 0.25)', '[0.25, 0.4)'}, 'Location','best');
 
 %% -------- GRÁFICA: POTENCIA vs FRAME --------
@@ -41,5 +41,5 @@ plot(frames_valid, pows_fix(:,3), '-^', 'LineWidth',1.5);
 hold off; grid on;
 xlabel('Número de frame');
 ylabel('Potencia del máximo local (PSD)');
-title('Evolución temporal de la potencia (ROI fija)');
+title('Evolución temporal de la potencia');
 legend({'[0, 0.1)', '[0.1, 0.25)', '[0.25, 0.4)'}, 'Location','best');

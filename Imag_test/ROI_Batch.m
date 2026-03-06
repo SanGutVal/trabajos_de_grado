@@ -4,10 +4,10 @@ clearvars
 %% -------- CONFIGURACIÓN --------
 carpeta = 'C:\Users\sangu\Documents\Trabajo de Grado\trabajos_de_grado\Imag_test';
 prefijo = 'frame_';            % e.g. 'frame_22'
-extension = '.png';            % 
+extension = '.jpg';            % 
 
-frame_ini = 22;                % primer índice
-n_frames  = 9;                % cantidad de frames a procesar
+frame_ini = 101;                % primer índice
+n_frames  = 10;                % cantidad de frames a procesar
 
 usar_roi_manual = false;       % flase = ROI fija en el centro de la imagen
 ancho_roi_fix = 216;
