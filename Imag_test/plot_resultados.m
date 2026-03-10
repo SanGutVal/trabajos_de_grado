@@ -1,5 +1,5 @@
 %% -------- CARGAR RESULTADOS --------
-nombre_mat = 'resultados_frames_101_a_110.mat';   % ajustar nombre
+nombre_mat = 'resultados_frames_101_a_116.mat';   % ajustar nombre
 load(nombre_mat, 'resultados');
 
 % Extraer solo elementos con datos válidos en ROI fija

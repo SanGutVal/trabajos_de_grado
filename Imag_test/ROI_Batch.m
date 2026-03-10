@@ -7,9 +7,9 @@ prefijo = 'frame_';            % e.g. 'frame_22'
 extension = '.jpg';            % 
 
 frame_ini = 101;                % primer índice
-n_frames  = 10;                % cantidad de frames a procesar
+n_frames  = 16;                % cantidad de frames a procesar
 
-usar_roi_manual = false;       % flase = ROI fija en el centro de la imagen
+usar_roi_manual = true;       % flase = ROI fija en el centro de la imagen
 ancho_roi_fix = 216;
 alto_roi_fix  = 146;
 
