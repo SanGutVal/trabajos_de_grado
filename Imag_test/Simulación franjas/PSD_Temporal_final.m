@@ -6,7 +6,7 @@
 %   3) PSD temporal de la fase con Welch
 % ==========================================================
 clear; clc;
-close all;
+%close all;
 
 %% ---------------- CONFIGURACION ----------------
 frameFolder  = 'franjas_sim_temporal_refinada';   % carpeta de frames

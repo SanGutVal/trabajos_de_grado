@@ -40,7 +40,7 @@ Ax = 0.10;   % pixeles
 dx = Ax*sin(2*pi*f_vib*t + pi/8);
 
 %---------------- RUIDOS ----------------%
-sigmaAdd   = 0.015;   % bajar primero para validar PSD
+sigmaAdd   = 0.115;   % bajar primero para validar PSD
 varSpeckle = 0.003;   % bajar primero para validar PSD
 
 %---------------- CAMPO DE ILUMINACIÓN FIJO ----------------%
