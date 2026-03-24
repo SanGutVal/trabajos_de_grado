@@ -1,79 +1,251 @@
-% Configuración de archivos y ROI
-carpeta   = '.';          % carpeta donde están los frames
+clear; clc;
+
+%% ===================== CONFIGURACION =====================
+carpeta   = 'C:\Users\sangu\Documents\Trabajo de Grado\trabajos_de_grado\Imag_test\Simulación franjas\franjas_sim_temporal_refinada';
 prefijo   = 'frame_';
-extension = '.jpg';       % o '.png'
+extension = '.png';
 
-frame_ini = 101;            % primer índice
-n_frames  = 15;          % número de frames a procesar
+frame_ini = 100;
+n_frames  = 450;
 
-ancho_roi = 54;           % columnas (ejemplo)
-alto_roi  = 36;           % filas
+% ROI fija centrada
+ancho_roi = 80;   % columnas
+alto_roi  = 48;   % filas
 
-% Frecuencia de muestreo temporal (video)
-fps = 30;                 % frames por segundo
+% Muestreo temporal
+fps = 30;
 
-%% Preasignación
-mu = [];      % medias por columna: [n_frames x Wroi]
-sd = [];      % desviaciones estándar por columna
-frames_vec = zeros(n_frames,1);
+% Demodulacion espacial en la ROI
+fx_nominal = 1/8;                    % ciclos/pixel
+estimate_fx_from_first_valid = false;
+use_hann_in_space = true;
 
-%% Bucle principal
-for k = 1:n_frames
-    idx = frame_ini + k - 1;
+% Fluctuacion de fase
+detrend_order = 1;                   % 0: quitar media, 1: quitar tendencia lineal
+
+% Guardado
+nombre_mat = sprintf('estadisticas_roi_%d_a_%d.mat', ...
+                     frame_ini, frame_ini + n_frames - 1);
+
+%% ===================== PREASIGNACION INICIAL =====================
+frames_req = frame_ini : frame_ini + n_frames - 1;
+n_req = numel(frames_req);
+
+mu = [];
+sd = [];
+
+frames_valid = zeros(n_req,1);
+time_s       = zeros(n_req,1);
+
+phi_wrapped  = zeros(n_req,1);
+phi_unwrapped = zeros(n_req,1);
+phi_fluct    = zeros(n_req,1);
+carrier_amp  = zeros(n_req,1);
+
+m_global     = zeros(n_req,1);
+sd_global    = zeros(n_req,1);
+
+roi_box = [];
+fx_used = fx_nominal;
+
+count_valid = 0;
+Wroi = [];
+Hroi = [];
+
+%% ===================== PASO 1: LOCALIZAR PRIMER FRAME VALIDO =====================
+first_valid_found = false;
+
+for idx = frames_req
     nombre = sprintf('%s%d%s', prefijo, idx, extension);
     ruta   = fullfile(carpeta, nombre);
 
     if ~isfile(ruta)
-        warning('No se encontró %s, se omite.', ruta);
         continue;
     end
 
     img = imread(ruta);
     if size(img,3) == 3
-        img_gray = rgb2gray(img);
-    else
-        img_gray = img;
+        img = rgb2gray(img);
     end
-    img_d = double(img_gray);
-    [H,W] = size(img_gray);
+    img = im2double(img);
 
-    % ROI fija centrada
-    cx = round(W/2); cy = round(H/2);
-    half_w = round(ancho_roi/2);
-    half_h = round(alto_roi/2);
+    [H,W] = size(img);
 
-    xmin = max(cx-half_w+1,1);
-    xmax = min(cx+half_w,  W);
-    ymin = max(cy-half_h+1,1);
-    ymax = min(cy+half_h,  H);
+    cx = round(W/2);
+    cy = round(H/2);
 
-    roi = img_d(ymin:ymax, xmin:xmax);  % tamaño aprox alto_roi x ancho_roi
+    half_w = floor(ancho_roi/2);
+    half_h = floor(alto_roi/2);
 
-    if k == 1
-        [Hroi,Wroi] = size(roi);
-        if Hroi ~= alto_roi || Wroi ~= ancho_roi
-            warning('ROI real (%dx%d) difiere de lo esperado (%dx%d).', ...
-                Hroi, Wroi, alto_roi, ancho_roi);
+    xmin = max(cx - half_w, 1);
+    xmax = min(xmin + ancho_roi - 1, W);
+
+    ymin = max(cy - half_h, 1);
+    ymax = min(ymin + alto_roi - 1, H);
+
+    if (xmax - xmin + 1) ~= ancho_roi
+        xmin = max(W - ancho_roi + 1, 1);
+        xmax = W;
+    end
+    if (ymax - ymin + 1) ~= alto_roi
+        ymin = max(H - alto_roi + 1, 1);
+        ymax = H;
+    end
+
+    roi = img(ymin:ymax, xmin:xmax);
+    [Hroi, Wroi] = size(roi);
+
+    mu = zeros(n_req, Wroi);
+    sd = zeros(n_req, Wroi);
+
+    roi_box = [xmin xmax ymin ymax];
+
+    if estimate_fx_from_first_valid
+        c0 = mean(roi,1).';
+        c0 = c0 - mean(c0);
+
+        if use_hann_in_space
+            ws = hann(Wroi, 'periodic');
+            c0 = c0 .* ws;
         end
-        mu = zeros(n_frames, Wroi);
-        sd = zeros(n_frames, Wroi);
+
+        C0 = fft(c0);
+        fgrid = (0:Wroi-1)'/Wroi;
+
+        searchIdx = 2:floor(Wroi/2);
+        [~, imax] = max(abs(C0(searchIdx)));
+        fx_used = fgrid(searchIdx(imax));
     end
 
-    frames_vec(k) = idx;
-
-    % Medias y desviaciones por columna dentro de la ROI
-    for j = 1:Wroi
-        col = roi(:,j);
-        mu(k,j) = mean(col);
-        sd(k,j) = std(col, 0);  % desviación estándar poblacional
-    end
+    first_valid_found = true;
+    break;
 end
 
-%% Guardar resultados temporales
-nombre_mat = sprintf('estadisticas_temporales_%d_a_%d.mat', ...
-                     frame_ini, frame_ini + n_frames - 1);
+if ~first_valid_found
+    error('No se encontró ningún frame válido en el rango solicitado.');
+end
 
-save(nombre_mat, 'mu', 'sd', 'frames_vec', ...
-     'ancho_roi', 'alto_roi', 'frame_ini', 'n_frames', 'fps');
+%% ===================== PASO 2: RECORRIDO PRINCIPAL =====================
+x = (0:Wroi-1).';
 
-fprintf('Guardado %s con mu, sd y frames_vec.\n', nombre_mat);
+for k = 1:n_req
+    idx = frames_req(k);
+    nombre = sprintf('%s%d%s', prefijo, idx, extension);
+    ruta   = fullfile(carpeta, nombre);
+
+    if ~isfile(ruta)
+        warning('No se encontró %s. Se omite.', ruta);
+        continue;
+    end
+
+    img = imread(ruta);
+    if size(img,3) == 3
+        img = rgb2gray(img);
+    end
+    img = im2double(img);
+
+    roi = img(roi_box(3):roi_box(4), roi_box(1):roi_box(2));
+
+    count_valid = count_valid + 1;
+    frames_valid(count_valid) = idx;
+    time_s(count_valid) = (idx - frame_ini) / fps;
+
+    % Estadisticas por columna
+    for j = 1:Wroi
+        col = roi(:,j);
+        mu(count_valid,j) = mean(col);
+        sd(count_valid,j) = std(col, 1);   % desviacion estandar poblacional
+    end
+
+    % Estadisticas globales de ROI
+    m_global(count_valid) = mean(roi(:));
+    sd_global(count_valid) = std(roi(:), 1);
+
+    % Demodulacion de fase en ROI
+    ck = mean(roi, 1).';
+    ck0 = ck - mean(ck);
+
+    if use_hann_in_space
+        ws = hann(Wroi, 'periodic');
+        ck0 = ck0 .* ws;
+    end
+
+    ref = exp(-1j * 2*pi * fx_used * x);
+    Ak = sum(ck0 .* ref);
+
+    phi_wrapped(count_valid) = angle(Ak);
+    carrier_amp(count_valid) = abs(Ak);
+end
+
+%% ===================== COMPACTAR RESULTADOS =====================
+frames_valid = frames_valid(1:count_valid);
+time_s       = time_s(1:count_valid);
+
+mu = mu(1:count_valid, :);
+sd = sd(1:count_valid, :);
+
+m_global = m_global(1:count_valid);
+sd_global = sd_global(1:count_valid);
+
+phi_wrapped = phi_wrapped(1:count_valid);
+carrier_amp = carrier_amp(1:count_valid);
+
+if count_valid < 4
+    error('Muy pocos frames válidos para análisis temporal.');
+end
+
+phi_unwrapped = unwrap(phi_wrapped);
+
+if detrend_order == 0
+    phi_fluct = phi_unwrapped - mean(phi_unwrapped);
+elseif detrend_order == 1
+    phi_fluct = detrend(phi_unwrapped, 1);
+else
+    error('detrend_order debe ser 0 o 1.');
+end
+
+change_profile_L2 = [0; vecnorm(diff(mu,1,1), 2, 2)];
+change_phase_abs  = [0; abs(diff(phi_fluct))];
+
+%% ===================== ESTRUCTURA DE SALIDA =====================
+results = struct();
+
+results.info.carpeta = carpeta;
+results.info.prefijo = prefijo;
+results.info.extension = extension;
+results.info.frame_ini = frame_ini;
+results.info.n_frames_solicitados = n_frames;
+results.info.n_frames_validos = count_valid;
+results.info.fps = fps;
+
+results.roi.ancho = Wroi;
+results.roi.alto  = Hroi;
+results.roi.xmin = roi_box(1);
+results.roi.xmax = roi_box(2);
+results.roi.ymin = roi_box(3);
+results.roi.ymax = roi_box(4);
+
+results.demod.fx_used = fx_used;
+results.demod.use_hann_in_space = use_hann_in_space;
+results.demod.detrend_order = detrend_order;
+
+results.time.frames_valid = frames_valid;
+results.time.time_s = time_s;
+
+results.signals.mu = mu;                         % [nFrames x Wroi]
+results.signals.sd = sd;                         % [nFrames x Wroi]
+results.signals.m_global = m_global;             % [nFrames x 1]
+results.signals.sd_global = sd_global;           % [nFrames x 1]
+results.signals.phi_wrapped = phi_wrapped;       % [rad]
+results.signals.phi_unwrapped = phi_unwrapped;   % [rad]
+results.signals.phi_fluct = phi_fluct;           % [rad]
+results.signals.carrier_amp = carrier_amp;       % amplitud carrier
+results.signals.change_profile_L2 = change_profile_L2;
+results.signals.change_phase_abs = change_phase_abs;
+
+save(nombre_mat, 'results');
+
+fprintf('Guardado %s\n', nombre_mat);
+fprintf('Frames validos: %d de %d solicitados\n', count_valid, n_frames);
+fprintf('ROI real: %d x %d px\n', Wroi, Hroi);
+fprintf('fx usada: %.6f ciclos/pixel\n', fx_used);
